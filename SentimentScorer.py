@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------------------
+# Name:        SentimentScorer.py
+# Purpose:	   to get aspect-based sentiment score of a review text 
+#
+# Author:      Smriti
+#
+# Created:     11/05/2015
+# Copyright:   (c) Smriti 2015
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 # coding=UTF-8
 from __future__ import division
 import nltk

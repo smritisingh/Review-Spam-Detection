@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------------------
+# Name:        machinelearnPCA.py
+# Purpose:	   Naive Bayes, SVM and Decision Tree classifiers along with Accuracy, confusion matrix, recall, precision and f1score calculations
+#
+# Author:      Smriti
+#
+# Created:     11/05/2015
+# Copyright:   (c) Smriti 2015
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 from __future__ import division
 from sklearn import tree,svm
 from sklearn.naive_bayes import GaussianNB

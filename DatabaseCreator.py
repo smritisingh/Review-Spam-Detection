@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------------------
+# Name:        DatabaseCreator.py
+# Purpose:	   to create database
+#
+# Author:      Smriti
+#
+# Created:     11/05/2015
+# Copyright:   (c) Smriti 2015
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 import sqlite3
 import os
 DATABASE = "HotelReview.db"

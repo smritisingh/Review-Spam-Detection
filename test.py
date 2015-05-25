@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
-# Name:        module1
-# Purpose:
+# Name:        test.py
+# Purpose:	   test program to calculate linguistic features of sample.txt sentences
 #
 # Author:      Smriti
 #
-# Created:     13/05/2015
+# Created:     11/05/2015
 # Copyright:   (c) Smriti 2015
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------

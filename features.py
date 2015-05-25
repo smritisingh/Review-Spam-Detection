@@ -1,7 +1,7 @@
 from __future__ import division
 #-------------------------------------------------------------------------------
-# Name:        module1
-# Purpose:
+# Name:        features.py
+# Purpose:		linguistic and POS featurs calculations
 #
 # Author:      Smriti
 #

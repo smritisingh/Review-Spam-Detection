@@ -1,4 +1,15 @@
-from major import makeTrainingSet
+#-------------------------------------------------------------------------------
+# Name:        unigram.py
+# Purpose:	   to get unigram score and add to the feature vector
+#
+# Author:      Smriti
+#
+# Created:     11/05/2015
+# Copyright:   (c) Smriti 2015
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
+from major import makeTrainingSet, saveToFile
 import nltk
 from nltk.corpus import stopwords
 stop = stopwords.words('english')
@@ -32,6 +43,56 @@ def getUnigramScores(TrainingSet):
                 HamUnigramScores.setdefault(unigram,0)
                 HamUnigramScores[unigram] += 1
     return SpamUnigramScores,HamUnigramScores
+
+def GetFeatures(text,SpamUnigramScores,HamUnigramScores):
+    HitsInSpam = 0
+    HitsInHam = 0
+
+    UnigramList = GetUnigrams(text)
+    for unigram in UnigramList:
+        if unigram in SpamUnigramScores.keys():
+            HitsInSpam += 1
+        if unigram in HamUnigramScores.keys():
+            HitsInHam+= 1
+    print    HitsInSpam, HitsInHam
+    return [HitsInSpam, HitsInHam]
+
+def makeFeatureVectors(TrainingSet, TestSet,SpamUnigramScores,HamUnigramScores):
+    TrainingFeatures = []
+    TrainingClass = []
+    TestFeatures = []
+    TestClass = []
+
+    for entry in TrainingSet:
+        #REVIEWID, HOTELNAME, REVIEWTEXT, POLARITY, SPAM
+
+        #-------------------FEature Set---------------------------
+        Features = []
+
+        CalculatedFeatures = GetFeatures(entry[2],SpamUnigramScores,HamUnigramScores) #------------------------|--------OTHER CALCULATED METRIC
+        for feature in CalculatedFeatures: Features.append(feature) #-------|
+
+        Features.append(entry[3]) #------POLARITY
+
+        #---------------------Class-------------------------------
+        TrainingFeatures.append(Features)
+        TrainingClass.append(entry[4])
+
+    for entry in TestSet:
+        #REVIEWID, HOTELNAME, REVIEWTEXT, POLARITY, SPAM
+        #-------------------FEature Set---------------------------
+        Features = []
+
+        CalculatedFeatures = GetFeatures(entry[2],SpamUnigramScores,HamUnigramScores) #------------------------|--------OTHER CALCULATED METRIC
+        for feature in CalculatedFeatures: Features.append(feature) #-------|
+
+        Features.append(entry[3]) #------POLARITY
+
+        #---------------------Class-------------------------------
+        TestFeatures.append(Features)
+        TestClass.append(entry[4])
+    return TrainingFeatures,TrainingClass,TestFeatures,TestClass
+
 
 def analyseUsingUnigramScores(TestSet,SpamUnigramScores,HamUnigramScores):
     TestResult = []
@@ -72,21 +133,22 @@ def makeConfusionMatrix(results, TestClass):
 
 def main():
     print('-------MAKING TRAINING AND TEST SET------')
-    TrainingSet, TestSet = makeTrainingSet(99)
+    TrainingSet, TestSet = makeTrainingSet(70)
     print('-------GETTING UNIGRAM SCORES------')
     SpamUnigramScores,HamUnigramScores = getUnigramScores(TrainingSet)
     print SpamUnigramScores
-    print('-------GETTING REVIEW CLASSES------')
-    TestClass = getReviewClass(TestSet)
-    print('-------CALCULATING TEST RESULTS------')
-    TestResults = analyseUsingUnigramScores(TestSet,SpamUnigramScores,HamUnigramScores)
-    print('-------MAKING CONFUSION MATRIX------')
-    ConfusionMatrix = makeConfusionMatrix(TestResults,TestClass)
-    print(ConfusionMatrix)
-    Accuracy = (ConfusionMatrix[0][0] + ConfusionMatrix[1][1])/(ConfusionMatrix[0][0] + ConfusionMatrix[1][1] + ConfusionMatrix[0][1] + ConfusionMatrix[1][0] + 1.0)
-    print('Accuracy : ',Accuracy)
+
+    TrainingFeatures,TrainingClass,TestFeatures,TestClass = makeFeatureVectors(TrainingSet, TestSet,SpamUnigramScores,HamUnigramScores)
+
+    saveToFile('./machinelearn/TrainingSet',TrainingSet)
+    saveToFile('./machinelearn/TestSet',TestSet)
+    saveToFile('./machinelearn/TrainingFeatures',TrainingFeatures)
+    saveToFile('./machinelearn/TestFeatures',TestFeatures)
+    saveToFile('./machinelearn/TrainingClass',TrainingClass)
+    saveToFile('./machinelearn/TestClass',TestClass)
 
 if __name__=="__main__":
     print('----ANALYSIS BEGINS----')
     main()
     print('----ANALYSIS ENDS----')
+

@@ -1,7 +1,7 @@
 from __future__ import division
 #-------------------------------------------------------------------------------
-# Name:        module1
-# Purpose:
+# Name:        major.py
+# Purpose:	   to make training and test datasets and to make the final feature vector from feature.py and SentmentScorer.py
 #
 # Author:      Smriti
 #

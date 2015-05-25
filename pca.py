@@ -1,3 +1,14 @@
+#-------------------------------------------------------------------------------
+# Name:        pca.py
+# Purpose:	   to reduce dimensionality of the features vector
+#
+# Author:      Smriti
+#
+# Created:     11/05/2015
+# Copyright:   (c) Smriti 2015
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
+
 def PCA_dimension_reducer( featurevectormatrix, requiredDimensions = 0):
 '''
 %PCA_dimension_reducer implements PCA algorithm 

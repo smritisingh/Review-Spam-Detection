@@ -1,10 +1,19 @@
+#-------------------------------------------------------------------------------
+# Name:        bigram.py
+# Purpose:	   to get unigram + bigram scores and add to the feature vector
+#
+# Author:      Smriti
+#
+# Created:     11/05/2015
+# Copyright:   (c) Smriti 2015
+# Licence:     <your licence>
+#-------------------------------------------------------------------------------
 
-
-from textblob import TextBlob
-from major import makeTrainingSet
+from major import makeTrainingSet, saveToFile
 import nltk
-
-#import machinelearn
+from nltk.corpus import stopwords
+stop = stopwords.words('english')
+from textblob import TextBlob
 
 def getReviewClass(GivenSet):
     ClassList = []
@@ -12,6 +21,10 @@ def getReviewClass(GivenSet):
         #REVIEWID, HOTELNAME, REVIEWTEXT, POLARITY, SPAM
         ClassList.append(entry[4])
     return ClassList
+
+def GetUnigrams(text):
+    words = nltk.word_tokenize(text)
+    return words
 
 def GetBigrams(text):
     blob = TextBlob(text)
@@ -23,6 +36,24 @@ def GetBigrams(text):
        Bigrams.append(cstr)
     return Bigrams
 
+def getUnigramScores(TrainingSet):
+    SpamUnigramScores = {}
+    HamUnigramScores = {}
+    for entry in TrainingSet:
+        #REVIEWID, HOTELNAME, REVIEWTEXT, POLARITY, SPAM
+
+
+        #-------------------FEature Set---------------------------
+        UnigramList = GetUnigrams(entry[2])
+        if entry[4] == 1:  #-------SPAM--------
+            for unigram in UnigramList:
+                SpamUnigramScores.setdefault(unigram,0)
+                SpamUnigramScores[unigram] += 1
+        elif entry[4] == 0:  #-------HAM--------
+            for unigram in UnigramList:
+                HamUnigramScores.setdefault(unigram,0)
+                HamUnigramScores[unigram] += 1
+    return SpamUnigramScores,HamUnigramScores
 
 def getBigramScores(TrainingSet):
     SpamBigramScores = {}
@@ -45,21 +76,81 @@ def getBigramScores(TrainingSet):
                 HamBigramScores[Bigram] += 1
     return SpamBigramScores,HamBigramScores
 
-def analyseUsingBigramScores(TestSet,SpamBigramScores,HamBigramScores):
+def GetFeatures(text,SpamUnigramScores,HamUnigramScores, SpamBigramScores, HamBigramScores):
+    HitsInSpamU, HitsInHamU = 0,0
+    HitsInSpamB, HitsInHamB = 0,0
+
+    UnigramList = GetUnigrams(text)
+    for unigram in UnigramList:
+        if unigram in SpamUnigramScores.keys():
+            HitsInSpamU += 1
+        if unigram in HamUnigramScores.keys():
+            HitsInHamU += 1
+
+    BigramList = GetBigrams(text)
+    for Bigram in BigramList:
+        if Bigram in SpamBigramScores.keys():
+            HitsInSpamB += 1
+        if Bigram in HamBigramScores.keys():
+            HitsInHamB+= 1
+
+    print    HitsInSpamU, HitsInHamU, HitsInSpamB, HitsInHamB
+    return [HitsInSpamU, HitsInHamU, HitsInSpamB, HitsInHamB]
+
+def makeFeatureVectors(TrainingSet, TestSet,SpamUnigramScores,HamUnigramScores, SpamBigramScores, HamBigramScores):
+    TrainingFeatures = []
+    TrainingClass = []
+    TestFeatures = []
+    TestClass = []
+
+    for entry in TrainingSet:
+        #REVIEWID, HOTELNAME, REVIEWTEXT, POLARITY, SPAM
+
+        #-------------------FEature Set---------------------------
+        Features = []
+
+        CalculatedFeatures = GetFeatures(entry[2],SpamUnigramScores,HamUnigramScores, SpamBigramScores, HamBigramScores) #------------------------|--------OTHER CALCULATED METRIC
+        for feature in CalculatedFeatures: Features.append(feature) #-------|
+
+        Features.append(entry[3]) #------POLARITY
+
+        #---------------------Class-------------------------------
+        TrainingFeatures.append(Features)
+        TrainingClass.append(entry[4])
+
+    for entry in TestSet:
+        #REVIEWID, HOTELNAME, REVIEWTEXT, POLARITY, SPAM
+        #-------------------FEature Set---------------------------
+        Features = []
+
+        CalculatedFeatures = GetFeatures(entry[2],SpamUnigramScores,HamUnigramScores) #------------------------|--------OTHER CALCULATED METRIC
+        for feature in CalculatedFeatures: Features.append(feature) #-------|
+
+        Features.append(entry[3]) #------POLARITY
+
+        #---------------------Class-------------------------------
+        TestFeatures.append(Features)
+        TestClass.append(entry[4])
+    return TrainingFeatures,TrainingClass,TestFeatures,TestClass
+
+
+def analyse(TestSet,SpamUnigramScores,HamUnigramScores):
     TestResult = []
     for entry in TestSet:
         entrySpamScore = 0
         entryHamScore  = 0
-        BigramList = GetBigrams(entry[2])
-        for Bigram in BigramList:
-                entrySpamScore += SpamBigramScores.get(Bigram,1) #----FIND Bigram SCORE IN SPAM
-                entryHamScore += HamBigramScores.get(Bigram,1)   #----FIND Bigram SCORE IN HAM
-        #print(entrySpamScore,entryHamScore)
+        UnigramList = GetUnigrams(entry[2])
+        for unigram in UnigramList:
+                if unigram.lower() not in stop:
+                #print unigram, SpamUnigramScores.get(unigram), HamUnigramScores.get(unigram)
+                    entrySpamScore += SpamUnigramScores.get(unigram,1) #----FIND UNIGRAM SCORE IN SPAM
+                    entryHamScore += HamUnigramScores.get(unigram,1)   #----FIND UNIGRAM SCORE IN HAM
+        print(entrySpamScore,entryHamScore)
         if entryHamScore - entrySpamScore > 0:
-            #print('HAM FOUND')
+            print('HAM FOUND')
             TestResult.append(0)  #-------FOUND HAM
         else:
-            #print('SPAM FOUND')
+            print('SPAM FOUND')
             TestResult.append(1)  #-------FOUND SPAM
     return TestResult
 
@@ -83,20 +174,23 @@ def makeConfusionMatrix(results, TestClass):
 def main():
     print('-------MAKING TRAINING AND TEST SET------')
     TrainingSet, TestSet = makeTrainingSet(70)
-    print('-------GETTING Bigram SCORES------')
+    print('-------GETTING UNIGRAM SCORES------')
+    SpamUnigramScores,HamUnigramScores = getUnigramScores(TrainingSet)
     SpamBigramScores,HamBigramScores = getBigramScores(TrainingSet)
-    print('-------GETTING REVIEW CLASSES------')
-    TestClass = getReviewClass(TestSet)
-    print('-------CALCULATING TEST RESULTS------')
-    TestResults = analyseUsingBigramScores(TestSet,SpamBigramScores,HamBigramScores)
-    print('-------MAKING CONFUSION MATRIX------')
-    ConfusionMatrix = makeConfusionMatrix(TestResults,TestClass)
-    print(ConfusionMatrix)
-    Accuracy = (ConfusionMatrix[0][0] + ConfusionMatrix[1][1])/(ConfusionMatrix[0][0] + ConfusionMatrix[1][1] + ConfusionMatrix[0][1] + ConfusionMatrix[1][0] + 0.0)
-    print('Accuracy : ',Accuracy)
+    print SpamUnigramScores
+    print SpamBigramScores
+
+    TrainingFeatures,TrainingClass,TestFeatures,TestClass = makeFeatureVectors(TrainingSet, TestSet,SpamUnigramScores,HamUnigramScores, SpamBigramScores, HamBigramScores)
+
+    saveToFile('./machinelearn/TrainingSet',TrainingSet)
+    saveToFile('./machinelearn/TestSet',TestSet)
+    saveToFile('./machinelearn/TrainingFeatures',TrainingFeatures)
+    saveToFile('./machinelearn/TestFeatures',TestFeatures)
+    saveToFile('./machinelearn/TrainingClass',TrainingClass)
+    saveToFile('./machinelearn/TestClass',TestClass)
 
 if __name__=="__main__":
     print('----ANALYSIS BEGINS----')
     main()
     print('----ANALYSIS ENDS----')
-    #machinelearn.main()
+
