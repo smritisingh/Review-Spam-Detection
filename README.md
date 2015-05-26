@@ -10,5 +10,5 @@
 * SentimentScorer.py : Calculation of aspect-based sentiment score of a review text as a feature
 * pca.py : feature vector dimentionality reducer
 * major.py : Creation of Training and Test dataset as well as feature vector creator
-* machinlearnpca.py : Naive Bayes, SVM and Decion Tree classifiers along with accuracy, confusion matrix, recall, precision and f1score calculation
+* machinlearnpca.py : Naive Bayes, SVM and Decision Tree classifiers along with accuracy, confusion matrix, recall, precision and f1score calculation
 * Unigram.py : unigram Spam hit score and non-spam hit score calculation
